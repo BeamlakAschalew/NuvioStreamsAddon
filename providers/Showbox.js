@@ -1623,8 +1623,20 @@ const getShowboxUrlFromTmdbInfo = async (
   const mainCacheKey = `tmdb-${tmdbType}-${tmdbId}.json`;
   let tmdbData = await getFromCache(mainCacheKey, mainCacheSubDir);
 
+  // Validate cached TMDB data - ensure it has the correct title fields
+  if (tmdbData) {
+    const hasValidTitle = tmdbType === "movie" 
+      ? (tmdbData.title || tmdbData.original_title)
+      : (tmdbData.name || tmdbData.original_name);
+    
+    if (!hasValidTitle) {
+      console.log(`  [Cache Validation] Cached TMDB data for ${tmdbType}/${tmdbId} is missing title/name. Invalidating cache and re-fetching.`);
+      tmdbData = null; // Force re-fetch
+    }
+  }
+
   if (!tmdbData || process.env.DISABLE_CACHE === "true") {
-    const tmdbApiUrl = `${TMDB_BASE_URL}/${tmdbId}/${tmdbType}?api_key=${TMDB_API_KEY}`;
+    const tmdbApiUrl = `${TMDB_BASE_URL}/${tmdbType}/${tmdbId}?api_key=${TMDB_API_KEY}`;
     console.log(`  Fetching TMDB data from: ${tmdbApiUrl}`);
     try {
       const response = await axios.get(tmdbApiUrl, { timeout: 10000 });
@@ -1661,7 +1673,7 @@ const getShowboxUrlFromTmdbInfo = async (
   );
 
   if (!tmdbAlternativeTitlesData || process.env.DISABLE_CACHE === "true") {
-    const altTitlesApiUrl = `${TMDB_BASE_URL}/${tmdbId}/${tmdbType}/alternative_titles?api_key=${TMDB_API_KEY}`;
+    const altTitlesApiUrl = `${TMDB_BASE_URL}/${tmdbType}/${tmdbId}/alternative_titles?api_key=${TMDB_API_KEY}`;
     console.log(`  Fetching TMDB alternative titles from: ${altTitlesApiUrl}`);
     try {
       const response = await axios.get(altTitlesApiUrl, { timeout: 10000 });
@@ -1690,7 +1702,7 @@ const getShowboxUrlFromTmdbInfo = async (
   let tmdbBackdropPaths = [];
 
   if (!tmdbImagesData || process.env.DISABLE_CACHE === "true") {
-    const imagesApiUrl = `${TMDB_BASE_URL}/${tmdbId}/${tmdbType}/images?api_key=${TMDB_API_KEY}`;
+    const imagesApiUrl = `${TMDB_BASE_URL}/${tmdbType}/${tmdbId}/images?api_key=${TMDB_API_KEY}`;
     console.log(`  Fetching TMDB images from: ${imagesApiUrl}`);
     try {
       const response = await axios.get(imagesApiUrl, { timeout: 10000 });
