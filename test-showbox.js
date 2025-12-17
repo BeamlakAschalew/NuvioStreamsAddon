@@ -10,6 +10,20 @@
  */
 
 const { getStreamsFromTmdbId } = require("./providers/Showbox");
+const fs = require("fs");
+const path = require("path");
+
+// Load cookie from cookies.txt
+let userCookie = null;
+try {
+  const cookiePath = path.join(__dirname, "cookies.txt");
+  if (fs.existsSync(cookiePath)) {
+    userCookie = fs.readFileSync(cookiePath, "utf8").trim();
+    console.log("[Test] Loaded cookie from cookies.txt");
+  }
+} catch (err) {
+  console.log("[Test] No cookie file found or error reading:", err.message);
+}
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -45,7 +59,14 @@ console.log("=".repeat(60));
 console.log("");
 
 // Test the provider
-getStreamsFromTmdbId(tmdbId, mediaType, season, episode)
+getStreamsFromTmdbId(
+  mediaType,
+  tmdbId,
+  season,
+  episode,
+  null, // regionPreference
+  userCookie // cookies
+)
   .then((streams) => {
     console.log("\n" + "=".repeat(60));
     console.log("RESULTS");
